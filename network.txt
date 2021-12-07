@@ -1,0 +1,34 @@
+====================================================================================================
+Layer (type:depth-idx)                             Output Shape              Param #
+====================================================================================================
+Model                                              --                        --
+├─TransformerEncoder: 1                            --                        --
+│    └─ModuleList: 2-1                             --                        --
+├─CustomTransformerDecoder: 1                      --                        --
+│    └─ModuleList: 2-2                             --                        --
+├─Embedding: 1-1                                   [2048, 31, 256]           8,448
+├─PositionalEncoding: 1-2                          [31, 2048, 256]           --
+│    └─Dropout: 2-3                                [31, 2048, 256]           --
+├─Embedding: 1-3                                   [2048, 30, 256]           (recursive)
+├─PositionalEncoding: 1-4                          [30, 2048, 256]           --
+│    └─Dropout: 2-4                                [30, 2048, 256]           --
+├─TransformerEncoder: 1-5                          [31, 2048, 256]           --
+│    └─ModuleList: 2-1                             --                        --
+│    │    └─TransformerEncoderLayer: 3-1           [31, 2048, 256]           789,760
+│    │    └─TransformerEncoderLayer: 3-2           [31, 2048, 256]           789,760
+├─CustomTransformerDecoder: 1-6                    [1, 2048, 256]            --
+│    └─ModuleList: 2-2                             --                        --
+│    │    └─CustomTransformerDecoderLayer: 3-3     [1, 2048, 256]            1,053,440
+│    │    └─CustomTransformerDecoderLayer: 3-4     [1, 2048, 256]            1,053,440
+├─Linear: 1-7                                      [256, 33]                 8,481
+====================================================================================================
+Total params: 2,124,321
+Trainable params: 2,124,321
+Non-trainable params: 0
+Total mult-adds (M): 70.48
+====================================================================================================
+Input size (MB): 1.00
+Forward/backward pass size (MB): 2017.53
+Params size (MB): 8.50
+Estimated Total Size (MB): 2027.02
+====================================================================================================

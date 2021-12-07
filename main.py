@@ -1,9 +1,16 @@
 import sys
 import numpy as np
+from os.path import exists
 from typing import Tuple
 
-MAX_SEQUENCE_LENGTH = 29
+from model import Model
+from dataset import PreTrainedVocab, tensorify_data
+from utils import standardize_input, put_on_device
+import torch
+from torch import nn
+
 TRAIN_URL = "https://scale-static-assets.s3-us-west-2.amazonaws.com/ml-interview/expand/train.txt"
+DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def load_file(file_path: str) -> Tuple[Tuple[str], Tuple[str]]:
@@ -29,18 +36,50 @@ def score(true_expansion: str, pred_expansion: str) -> int:
 
 
 # --------- START OF IMPLEMENT THIS --------- #
-def predict(factors: str):
-    return factors
+def predict(factors: str, model: nn.Module, vocab: PreTrainedVocab):
+    factors = "<" + factors + ">" + "="
+
+    x_padded = tensorify_data(vocab, factors)
+    x_padded = put_on_device(x_padded, device=DEVICE)[0]
+    x_padded = x_padded.permute(1, 0)
+    output = model.predict(x_padded)
+    output = output.detach().squeeze(1).tolist()  # [seq_len, bs]
+
+    decoded_pred = "".join(
+            [vocab.reverse_vocab_mapping[token_id] for token_id in output]
+        )
+
+    return standardize_input(decoded_pred)
 
 
 # --------- END OF IMPLEMENT THIS --------- #
 
 
 def main(filepath: str):
+    if  "test.txt" not in filepath:
+        print("PLEASE ENSURE THAT 'test.txt' is present in this directory")
+        print("If 'test.txt' is present, please pass '-t' as arg (python3 main.py -t)")
+        print("INFERENCE WILL NOW RUN ON PROVIDED TRAINING SET\n")
+
     factors, expansions = load_file(filepath)
-    pred = [predict(f) for f in factors]
+
+    vocab_mapping_path = "vocab_mapping.pkl"
+    reverse_vocab_mapping_path = "reverse_vocab_mapping.pkl"
+    model_weights_path = "model.pth"
+
+    vocab = PreTrainedVocab(vocab_mapping_path, reverse_vocab_mapping_path)
+    model = Model(vocab).to(device=DEVICE)
+    model.load_state_dict(torch.load(model_weights_path))
+    model.eval()
+
+    factors = factors[-20:]
+    expansions = expansions[-20:]
+
+    pred = [predict(f, model, vocab) for f in factors]
     scores = [score(te, pe) for te, pe in zip(expansions, pred)]
     print(np.mean(scores))
+    for i in range(len(pred)):
+        print('Pred: ', pred[i], 'Expansion: ', expansions[i])
 
 
 if __name__ == "__main__":
