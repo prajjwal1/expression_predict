@@ -69,17 +69,12 @@ def main(filepath: str):
 
     vocab = PreTrainedVocab(vocab_mapping_path, reverse_vocab_mapping_path)
     model = Model(vocab).to(device=DEVICE)
-    model.load_state_dict(torch.load(model_weights_path))
+    model.load_state_dict(torch.load(model_weights_path, map_location=DEVICE))
     model.eval()
-
-    factors = factors[-20:]
-    expansions = expansions[-20:]
 
     pred = [predict(f, model, vocab) for f in factors]
     scores = [score(te, pe) for te, pe in zip(expansions, pred)]
     print(np.mean(scores))
-    for i in range(len(pred)):
-        print('Pred: ', pred[i], 'Expansion: ', expansions[i])
 
 
 if __name__ == "__main__":

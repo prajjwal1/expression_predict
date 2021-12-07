@@ -5,7 +5,6 @@ from typing import Optional
 from torch import Tensor
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DEVICE = "cuda"
 MAX_LENGTH = 29
 
 class PositionalEncoding(nn.Module):
